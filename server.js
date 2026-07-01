@@ -3,8 +3,10 @@ const cors = require("cors");
 require("dotenv").config();
 
 const connectDB = require("./config/db");
-const customerRoutes = require("./routes/customerRoutes");
 const authRoutes = require("./routes/authRoutes");
+const customerRoutes = require("./routes/customerRoutes");
+const productRoutes = require("./routes/productRoutes.js");
+const sellerRoutes = require("./routes/sellerRoutes");
 
 const app = express();
 connectDB();
@@ -20,7 +22,8 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/customer", customerRoutes);
-
+app.use("/api/products", productRoutes);
+app.use("/api/sellers", sellerRoutes);
 
 
 app.listen(process.env.PORT, () => {
