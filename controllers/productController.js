@@ -1,13 +1,20 @@
 const Product = require("../models/productModel");
+const uploadToCloudinary = require("../utils/uploadToCloudinary");
 const slugify = require("slugify");
 
 // CREATE PRODUCT
  const createProduct = async (req, res) => {
   try {
-    const images = req.files.map((file) => ({
-      url: file.path,
-      public_id: file.filename,
-    }));
+    const images = [];
+
+    for (const file of req.files) {
+    const result = await uploadToCloudinary(file.buffer);
+
+      images.push({
+        url: result.secure_url,
+        public_id: result.public_id,
+      });
+    }
     const {
       name,
       description,
@@ -23,6 +30,14 @@ const slugify = require("slugify");
       tags,
       isFeatured,
     } = req.body;
+
+    const specificationsData = specifications
+  ? JSON.parse(specifications)
+  : {};
+
+    const tagsData = tags ? JSON.parse(tags) : [];
+
+    const featured = isFeatured === "true";
 
     const existing = await Product.findOne({ sku });
 
@@ -49,7 +64,7 @@ const slugify = require("slugify");
       slug: slugify(name, { lower: true }),
       description,
       shortDescription,
-      category,
+      category: category.trim(),
       subCategory,
       brand,
       seller: req.user.id,
@@ -58,9 +73,9 @@ const slugify = require("slugify");
       stock,
       sku,
       images,
-      specifications,
-      tags,
-      isFeatured,
+     specifications: specificationsData,
+     tags: tagsData,
+     isFeatured: featured,
     });
 
     res.status(201).json({

@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
+const controller = require("../controllers/ordersController");
+
 const {
   createOrder,
   getMyOrders,
@@ -10,7 +12,7 @@ const {
   getSellerOrderById,
   updateOrderStatus,
   updateTracking,
-} = require("../controllers/ordersController");
+} = controller;
 
 const authMiddleware  = require("../middlewares/authMiddleware");
 
