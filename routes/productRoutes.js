@@ -12,6 +12,7 @@ const {
   updateStock,
 } = require("../controllers/productController");
 const authMiddleware = require("../middlewares/authMiddleware");
+const upload = require("../middlewares/upload");
 
 const router = express.Router();
 

@@ -1,13 +1,47 @@
-// =========================================
+const Order = require("../models/order");
+const Cart = require("../models/cart");
+const Product = require("../models/productModel");
+const Customer = require("../models/customers");
+
+
+
 // Create Order
 // POST /api/orders
-// =========================================
 const createOrder = async (req, res) => {
   try {
     const customerId = req.user.id;
-    const { paymentMethod = "COD", notes = "" } = req.body;
 
-    // Get customer
+    const {
+      checkoutType,
+      productId,
+      quantity,
+      shippingAddress,
+      paymentMethod = "COD",
+      notes = "",
+    } = req.body;
+
+    if (!["cart", "buyNow"].includes(checkoutType)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid checkout type",
+      });
+    }
+
+    if (
+      !shippingAddress ||
+      !shippingAddress.fullName ||
+      !shippingAddress.phone ||
+      !shippingAddress.addressLine1 ||
+      !shippingAddress.city ||
+      !shippingAddress.state ||
+      !shippingAddress.postalCode
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Complete shipping address is required",
+      });
+    }
+
     const customer = await Customer.findById(customerId);
 
     if (!customer) {
@@ -17,36 +51,89 @@ const createOrder = async (req, res) => {
       });
     }
 
-    // Get cart
-    const cart = await Cart.findOne({ customer: customerId }).populate(
-      "items.product"
-    );
+    let cartItems = [];
 
-    if (!cart || cart.items.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Your cart is empty",
-      });
+    if (checkoutType === "cart") {
+
+      const cart = await Cart.findOne({
+        customer: customerId,
+      }).populate("items.product");
+
+      if (!cart || cart.items.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Your cart is empty",
+        });
+      }
+
+      cartItems = cart.items;
+
     }
 
+    else {
+      if (!productId) {
+        return res.status(400).json({
+          success: false,
+          message: "Product ID is required",
+        });
+      }
+
+      if (!quantity || quantity < 1) {
+        return res.status(400).json({
+          success: false,
+          message: "Quantity must be at least 1",
+        });
+      }
+
+      const product = await Product.findById(productId);
+
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: "Product not found",
+        });
+      }
+
+      if (!product.isActive) {
+        return res.status(400).json({
+          success: false,
+          message: "Product is currently unavailable",
+        });
+      }
+
+      if (product.stock < quantity) {
+        return res.status(400).json({
+          success: false,
+          message: "Insufficient stock",
+        });
+      }
+
+      cartItems = [
+        {
+          product,
+          quantity,
+        },
+      ];
+
+    }
     let subtotal = 0;
     const orderItems = [];
 
-    // Validate every product
-    for (const item of cart.items) {
+    for (const item of cartItems) {
+
       const product = item.product;
 
       if (!product) {
         return res.status(404).json({
           success: false,
-          message: "A product in your cart no longer exists",
+          message: "Product not found",
         });
       }
 
-      if (!product.active) {
+      if (!product.isActive) {
         return res.status(400).json({
           success: false,
-          message: `${product.name} is currently unavailable`,
+          message: `${product.name} is unavailable`,
         });
       }
 
@@ -73,9 +160,8 @@ const createOrder = async (req, res) => {
         discount: 0,
         subtotal: itemSubtotal,
       });
-    }
 
-    // Pricing
+    }
     const shippingCharge = 0;
     const tax = 0;
     const discount = 0;
@@ -86,10 +172,8 @@ const createOrder = async (req, res) => {
       tax -
       discount;
 
-    // Generate Order Number
     const orderNumber = `ORD${Date.now()}`;
 
-    // Create Order
     const order = await Order.create({
       orderNumber,
 
@@ -102,9 +186,9 @@ const createOrder = async (req, res) => {
 
       items: orderItems,
 
-      shippingAddress: customer.address,
+      shippingAddress,
 
-      billingAddress: customer.address,
+      billingAddress: shippingAddress,
 
       pricing: {
         subtotal,
@@ -116,19 +200,15 @@ const createOrder = async (req, res) => {
 
       payment: {
         method: paymentMethod,
-        status:
-          paymentMethod === "COD"
-            ? "PENDING"
-            : "PENDING",
+        status: "PENDING",
       },
 
       notes,
     });
 
-    // Reduce Stock
-    for (const item of cart.items) {
+    for (const item of orderItems) {
       await Product.findByIdAndUpdate(
-        item.product._id,
+        item.product,
         {
           $inc: {
             stock: -item.quantity,
@@ -137,10 +217,14 @@ const createOrder = async (req, res) => {
       );
     }
 
-    // Clear Cart
-    cart.items = [];
-    await cart.save();
-
+    if (checkoutType === "cart") {
+      await Cart.findOneAndUpdate(
+        { customer: customerId },
+        {
+          items: [],
+        }
+      );
+    }
     return res.status(201).json({
       success: true,
       message: "Order placed successfully",
