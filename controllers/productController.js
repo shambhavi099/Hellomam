@@ -4,6 +4,10 @@ const slugify = require("slugify");
 // CREATE PRODUCT
  const createProduct = async (req, res) => {
   try {
+    const images = req.files.map((file) => ({
+      url: file.path,
+      public_id: file.filename,
+    }));
     const {
       name,
       description,
@@ -15,8 +19,6 @@ const slugify = require("slugify");
       discountPrice,
       stock,
       sku,
-      images,
-      thumbnail,
       specifications,
       tags,
       isFeatured,
@@ -56,7 +58,6 @@ const slugify = require("slugify");
       stock,
       sku,
       images,
-      thumbnail,
       specifications,
       tags,
       isFeatured,

@@ -22,7 +22,8 @@ router.get("/related/:id", getRelatedProducts);
 router.get("/", getProducts);
 router.get("/:id", getProductById);
 
-router.post("/", authMiddleware, createProduct);
+
+router.post("/", authMiddleware,upload.array("images", 5),  createProduct);
 router.put("/:id", updateProduct);
 router.patch("/:id/status", toggleProductStatus);
 router.patch("/:id/stock", updateStock);
