@@ -11,6 +11,7 @@ const {
   getRelatedProducts,
   updateStock,
 } = require("../controllers/productController");
+const authMiddleware = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
@@ -20,8 +21,7 @@ router.get("/related/:id", getRelatedProducts);
 router.get("/", getProducts);
 router.get("/:id", getProductById);
 
-// Admin Routes
-router.post("/", createProduct);
+router.post("/", authMiddleware, createProduct);
 router.put("/:id", updateProduct);
 router.patch("/:id/status", toggleProductStatus);
 router.patch("/:id/stock", updateStock);

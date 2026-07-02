@@ -23,21 +23,15 @@ const productSchema = new mongoose.Schema(
       default: "",
     },
     category: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
       required: true,
-      trim: true,
-    },
-    subCategory: {
-      type: String,
-      default: "",
-      trim: true,
     },
     brand: {
       type: String,
-      default: "",
       trim: true,
+      default: "",
     },
-
     seller: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Seller",
@@ -49,6 +43,16 @@ const productSchema = new mongoose.Schema(
       min: 0,
     },
     discountPrice: {
+      type: Number,
+      default: 0,
+    },
+    rating: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+    numReviews: {
       type: Number,
       default: 0,
     },
