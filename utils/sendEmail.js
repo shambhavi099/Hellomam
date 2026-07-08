@@ -5,6 +5,8 @@ const sendEmail = async (options) => {
 
   try {
 
+    console.log("Entered sendEmail");
+
     const transporter = nodemailer.createTransport({
 
       host: "smtp-relay.brevo.com",
@@ -16,8 +18,14 @@ const sendEmail = async (options) => {
         pass: process.env.EMAIL_PASS,
       },
 
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
+
     });
 
+
+    console.log("Transport created");
 
 
     await transporter.sendMail({
@@ -33,13 +41,12 @@ const sendEmail = async (options) => {
     });
 
 
-
-    console.log("Email sent successfully");
+    console.log("Email sent");
 
 
   } catch (error) {
 
-    console.log("Email error:", error.message);
+    console.log("BREVO ERROR:", error.message);
 
     throw error;
 
