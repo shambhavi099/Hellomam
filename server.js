@@ -10,8 +10,7 @@ const sellerRoutes = require("./routes/sellerRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const orderRoutes = require("./routes/orderRoutes");
-
-
+const paymentRoutes = require("./routes/paymentRoutes");
 
 
 const app = express();
@@ -33,6 +32,7 @@ app.use("/api/sellers", sellerRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/payments", paymentRoutes);
 
 
 app.listen(process.env.PORT, () => {

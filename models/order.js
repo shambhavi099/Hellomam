@@ -217,7 +217,21 @@ const orderSchema = new mongoose.Schema(
       },
     },
 
-    payment: paymentSchema,
+    payment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Payment",
+    },
+
+    paymentStatus: {
+      type: String,
+      enum: [
+        "pending",
+        "paid",
+        "failed",
+        "refunded",
+      ],
+      default: "pending",
+    },
 
     shipping: shippingSchema,
 
@@ -266,4 +280,6 @@ orderSchema.index({ orderStatus: 1 });
 
 orderSchema.index({ createdAt: -1 });
 
-module.exports = mongoose.model("Order", orderSchema);
+module.exports =
+  mongoose.models.Order ||
+  mongoose.model("Order", orderSchema);

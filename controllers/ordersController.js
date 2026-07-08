@@ -1,9 +1,9 @@
+
 const Order = require("../models/order");
 const Cart = require("../models/cart");
 const Product = require("../models/productModel");
 const Customer = require("../models/customers");
-
-
+const mongoose = require("mongoose"); 
 
 // Create Order
 // POST /api/orders
@@ -330,11 +330,11 @@ const getOrderById = async (req, res) => {
 // =========================================
 const cancelOrder = async (req, res) => {
   try {
+
     const customerId = req.user.id;
     const { id } = req.params;
     const { cancelReason = "" } = req.body;
 
-    // Validate Order ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
@@ -342,57 +342,57 @@ const cancelOrder = async (req, res) => {
       });
     }
 
-    // Find customer's order
-    const order = await Order.findOne({
-      _id: id,
-      "customer.customerId": customerId,
-    });
+      // Find customer's order
+      const order = await Order.findOne({
+        _id: id,
+        "customer.customerId": customerId,
+      });
 
-    if (!order) {
-      return res.status(404).json({
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found",
+        });
+      }
+
+      // Check if order can be cancelled
+      const cancellableStatuses = ["PENDING", "CONFIRMED"];
+
+      if (!cancellableStatuses.includes(order.orderStatus)) {
+        return res.status(400).json({
+          success: false,
+          message: `Order cannot be cancelled once it is ${order.orderStatus}`,
+        });
+      }
+
+      // Restore Stock
+      for (const item of order.items) {
+        await Product.findByIdAndUpdate(item.product, {
+          $inc: {
+            stock: item.quantity,
+          },
+        });
+      }
+
+      // Update Order
+      order.orderStatus = "CANCELLED";
+      order.cancelReason = cancelReason;
+
+      await order.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Order cancelled successfully",
+        order,
+      });
+
+    } catch (error) {
+      return res.status(500).json({
         success: false,
-        message: "Order not found",
+        message: error.message,
       });
     }
-
-    // Check if order can be cancelled
-    const cancellableStatuses = ["PENDING", "CONFIRMED"];
-
-    if (!cancellableStatuses.includes(order.orderStatus)) {
-      return res.status(400).json({
-        success: false,
-        message: `Order cannot be cancelled once it is ${order.orderStatus}`,
-      });
-    }
-
-    // Restore Stock
-    for (const item of order.items) {
-      await Product.findByIdAndUpdate(item.product, {
-        $inc: {
-          stock: item.quantity,
-        },
-      });
-    }
-
-    // Update Order
-    order.orderStatus = "CANCELLED";
-    order.cancelReason = cancelReason;
-
-    await order.save();
-
-    return res.status(200).json({
-      success: true,
-      message: "Order cancelled successfully",
-      order,
-    });
-
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+  };
 
 
 
