@@ -99,24 +99,30 @@ const login = async (req, res) => {
 // Forgot Password
 const forgotPassword = async (req, res) => {
   try {
+
+    console.log("Forgot password API hit");
+
     const { email } = req.body;
+
+    console.log("Email received:", email);
 
 
     let user = await Seller.findOne({ email });
-
 
     if (!user) {
       user = await Customer.findOne({ email });
     }
 
 
+    console.log("User found:", user ? true : false);
+
+
     if (!user) {
       return res.status(404).json({
-        success: false,
-        message: "No account found with this email",
+        success:false,
+        message:"No account found with this email"
       });
     }
-
 
     const resetToken = crypto
       .randomBytes(32)
@@ -174,19 +180,13 @@ const resetPassword = async (req, res) => {
       .update(req.params.token)
       .digest("hex");
 
-
-
     let user = await Seller.findOne({
-
       resetPasswordToken,
-
-      resetPasswordExpire: {
+     resetPasswordExpire: {
         $gt: Date.now(),
       },
 
     });
-
-
 
     if (!user) {
 
@@ -197,15 +197,9 @@ const resetPassword = async (req, res) => {
         resetPasswordExpire: {
           $gt: Date.now(),
         },
-
       });
-
     }
-
-
-
     if (!user) {
-
       return res.status(400).json({
         success: false,
         message: "Invalid or expired token",
