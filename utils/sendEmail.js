@@ -30,9 +30,16 @@ const sendEmail = async (options) => {
 
     return true;
   } catch (error) {
-    console.log("Email Error:", error.message);
-    throw new Error("Email could not be sent");
-  }
+
+  console.log("========= EMAIL ERROR =========");
+
+  console.log(error);
+
+  console.log("===============================");
+
+  throw error;
+
+}
 };
 
 module.exports = sendEmail;
