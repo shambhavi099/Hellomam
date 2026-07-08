@@ -28,9 +28,14 @@ const sendEmail = async (options) => {
     console.log("Transport created");
 
 
+    await transporter.verify();
+
+    console.log("Brevo connected");
+
+
     await transporter.sendMail({
 
-      from: `"HelloMaam" <${process.env.EMAIL_USER}>`,
+      from: process.env.EMAIL_USER,
 
       to: options.email,
 
@@ -44,7 +49,7 @@ const sendEmail = async (options) => {
     console.log("Email sent");
 
 
-  } catch (error) {
+  } catch(error){
 
     console.log("BREVO ERROR:", error.message);
 
