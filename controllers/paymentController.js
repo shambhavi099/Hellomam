@@ -1,5 +1,5 @@
 const Payment = require("../models/Payment");
-const Order = require("../models/Order");
+const Order = require("../models/order");
 
 
 // @desc Process demo payment
