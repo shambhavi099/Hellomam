@@ -1,29 +1,38 @@
 const nodemailer = require("nodemailer");
 
 const sendEmail = async (options) => {
+  try {
+    console.log("Preparing email...");
+    console.log("EMAIL:", process.env.EMAIL_USER);
+    console.log("Sending mail to:", options.email);
 
-  console.log("Sending mail to:", options.email);
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+      connectionTimeout: 10000,
+    });
 
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
+    console.log("Before sendMail");
 
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
+    const info = await transporter.sendMail({
+      from: `"E-Commerce Support" <${process.env.EMAIL_USER}>`,
+      to: options.email,
+      subject: options.subject,
+      text: options.message,
+    });
 
+    console.log("Mail sent:", info.messageId);
 
-  const info = await transporter.sendMail({
-    from: process.env.EMAIL_USER,
-    to: options.email,
-    subject: options.subject,
-    text: options.message,
-  });
-
-
-  console.log("Mail sent:", info.messageId);
+    return true;
+  } catch (error) {
+    console.log("Email Error:", error.message);
+    throw new Error("Email could not be sent");
+  }
 };
-
 
 module.exports = sendEmail;
