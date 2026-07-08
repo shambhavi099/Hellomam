@@ -1,33 +1,25 @@
 const nodemailer = require("nodemailer");
+const dns = require("dns");
+
+dns.setDefaultResultOrder("ipv4first");
 
 
 const sendEmail = async (options) => {
 
   try {
 
-    console.log("Preparing email...");
-    console.log("Sending mail to:", options.email);
-
-
     const transporter = nodemailer.createTransport({
 
-      host: "smtp.gmail.com",
-
-      port: 587,
-
-      secure: false,
-
-      family: 4, // force IPv4
+      service: "gmail",
 
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
 
+      connectionTimeout: 20000,
+
     });
-
-
-    console.log("Before sendMail");
 
 
     const info = await transporter.sendMail({
@@ -43,12 +35,10 @@ const sendEmail = async (options) => {
     });
 
 
-
     console.log("Mail sent:", info.messageId);
 
 
-  } catch (error) {
-
+  } catch(error){
 
     console.log("Email Error:", error);
 
