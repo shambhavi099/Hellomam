@@ -24,6 +24,8 @@ app.get("/", (req, res) => {
   res.json({ message: "E-Commerce Backend is running" });
 });
 
+console.log("EMAIL:", process.env.EMAIL_USER);
+
 
 app.use("/api/auth", authRoutes);
 app.use("/api/customer", customerRoutes);
