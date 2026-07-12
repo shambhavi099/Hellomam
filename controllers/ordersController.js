@@ -515,7 +515,6 @@ const getSellerOrderById = async (req, res) => {
     });
   }
 };
- 
 
 const updateOrderStatus = async (req, res) => {
   try {
@@ -574,6 +573,10 @@ const updateOrderStatus = async (req, res) => {
     order.orderStatus = orderStatus;
 
     // Shipping timestamps
+    if (!order.shipping) {
+      order.shipping = {};
+    }
+
     if (orderStatus === "SHIPPED") {
       order.shipping.shippedAt = new Date();
     }
