@@ -1,5 +1,7 @@
 const Seller = require("../models/sellersModel");
 const Product = require("../models/productModel");
+const Order = require("../models/order");
+const Customer = require("../models/customers");
 const bcrypt = require("bcryptjs");
 
 
@@ -83,9 +85,6 @@ const registerSeller = async (req, res) => {
   }
 };
 
-// ======================================
-// Get Seller Profile
-// ======================================
 const getProfile = async (req, res) => {
   try {
     const seller = await Seller.findById(req.user.id).select("-password");
@@ -111,9 +110,6 @@ const getProfile = async (req, res) => {
   }
 };
 
-// ======================================
-// Update Seller Profile
-// ======================================
 const updateProfile = async (req, res) => {
   try {
     const seller = await Seller.findById(req.user.id);
@@ -172,9 +168,6 @@ const updateProfile = async (req, res) => {
   }
 };
 
-// ======================================
-// Change Password
-// ======================================
 const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -223,53 +216,293 @@ const changePassword = async (req, res) => {
   }
 };
 
-// ======================================
-// Dashboard
-// ======================================
 const dashboard = async (req, res) => {
   try {
     const sellerId = req.user.id;
 
-    const totalProducts = await Product.countDocuments({
-      seller: sellerId,
-    });
+    const firstDayOfMonth = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth(),
+      1
+    );
 
-    const activeProducts = await Product.countDocuments({
-      seller: sellerId,
-      isActive: true,
-    });
+    const sevenMonthsAgo = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth() - 6,
+      1
+    );
 
-    const inactiveProducts = await Product.countDocuments({
-      seller: sellerId,
-      isActive: false,
-    });
+    const [
+      totalProducts,
+      totalOrders,
+      totalUsers,
+      totalRevenue,
+      monthlyRevenue,
+      monthlySales,
+      salesChart,
+    ] = await Promise.all([
+      Product.countDocuments({
+        seller: sellerId,
+      }),
 
-    const totalStock = await Product.aggregate([
-      {
-        $match: {
-          seller: seller._id,
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          stock: {
-            $sum: "$stock",
+      Order.countDocuments({
+        "items.seller": sellerId,
+      }),
+
+      Order.distinct("customer.customerId", {
+        "items.seller": sellerId,
+      }),
+
+      Order.aggregate([
+        {
+          $match: {
+            paymentStatus: "paid",
           },
         },
+        {
+          $unwind: "$items",
+        },
+        {
+          $match: {
+            "items.seller": sellerId,
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            revenue: {
+              $sum: "$items.subtotal",
+            },
+          },
+        },
+      ]),
+
+      Order.aggregate([
+        {
+          $match: {
+            paymentStatus: "paid",
+            createdAt: {
+              $gte: firstDayOfMonth,
+            },
+          },
+        },
+        {
+          $unwind: "$items",
+        },
+        {
+          $match: {
+            "items.seller": sellerId,
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            revenue: {
+              $sum: "$items.subtotal",
+            },
+          },
+        },
+      ]),
+
+      Order.countDocuments({
+        "items.seller": sellerId,
+        createdAt: {
+          $gte: firstDayOfMonth,
+        },
+      }),
+
+      Order.aggregate([
+        {
+          $match: {
+            paymentStatus: "paid",
+            createdAt: {
+              $gte: sevenMonthsAgo,
+            },
+          },
+        },
+        {
+          $unwind: "$items",
+        },
+        {
+          $match: {
+            "items.seller": sellerId,
+          },
+        },
+        {
+          $group: {
+            _id: {
+              year: {
+                $year: "$createdAt",
+              },
+              month: {
+                $month: "$createdAt",
+              },
+            },
+            revenue: {
+              $sum: "$items.subtotal",
+            },
+          },
+        },
+        {
+          $sort: {
+            "_id.year": 1,
+            "_id.month": 1,
+          },
+        },
+      ]),
+      Order.aggregate([
+        {
+          $unwind: "$items",
+        },
+        {
+          $match: {
+            "items.seller": sellerId,
+          },
+        },
+        {
+          $lookup: {
+            from: "products",
+            localField: "items.product",
+            foreignField: "_id",
+            as: "product",
+          },
+        },
+        {
+          $unwind: "$product",
+        },
+        {
+          $lookup: {
+            from: "categories",
+            localField: "product.category",
+            foreignField: "_id",
+            as: "category",
+          },
+        },
+        {
+          $unwind: "$category",
+        },
+        {
+          $group: {
+            _id: "$category.name",
+            productsSold: {
+              $sum: "$items.quantity",
+            },
+          },
+        },
+        {
+          $sort: {
+            productsSold: -1,
+          },
+        },
+        {
+          $limit: 5,
+        },
+      ]),
+      Order.aggregate([
+        {
+          $unwind: "$items",
+        },
+        {
+          $match: {
+            "items.seller": sellerId,
+          },
+        },
+        {
+          $lookup: {
+            from: "products",
+            localField: "items.product",
+            foreignField: "_id",
+            as: "product",
+          },
+        },
+        {
+          $unwind: "$product",
+        },
+        {
+          $lookup: {
+            from: "categories",
+            localField: "product.category",
+            foreignField: "_id",
+            as: "category",
+          },
+        },
+        {
+          $unwind: "$category",
+        },
+        {
+          $group: {
+            _id: "$category.name",
+            revenue: {
+              $sum: "$items.subtotal",
+            },
+          },
+        },
+        {
+          $sort: {
+            revenue: -1,
+          },
+        },
+        {
+          $limit: 5,
+        },
+      ]),
+      Order.aggregate([
+    {
+      $match: {
+        "items.seller": sellerId,
       },
+    },
+    {
+      $group: {
+        _id: "$shippingAddress.city",
+        customers: {
+          $addToSet: "$customer.customerId",
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        city: "$_id",
+        customers: {
+          $size: "$customers",
+        },
+      },
+    },
+    {
+      $sort: {
+        customers: -1,
+      },
+    },
+  ])
+
     ]);
+
+    const monthNames = [
+    "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec",
+    ];
+
+    const formattedSalesChart = salesChart.map((item) => ({
+      month: monthNames[item._id.month - 1],
+      revenue: item.revenue,
+    }));
 
     res.status(200).json({
       success: true,
       dashboard: {
         totalProducts,
-        activeProducts,
-        inactiveProducts,
-        totalStock:
-          totalStock.length > 0
-            ? totalStock[0].stock
+        totalOrders,
+        totalUsers: totalUsers.length,
+        totalRevenue:
+          totalRevenue.length > 0
+            ? totalRevenue[0].revenue
             : 0,
+        monthlyRevenue:
+          monthlyRevenue.length > 0
+            ? monthlyRevenue[0].revenue
+            : 0,
+        monthlySales,
+        salesChart: formattedSalesChart,
       },
     });
   } catch (error) {
@@ -282,9 +515,6 @@ const dashboard = async (req, res) => {
   }
 };
 
-// ======================================
-// Soft Delete Seller
-// ======================================
 const deactivateSeller = async (req, res) => {
   try {
     const seller = await Seller.findById(req.user.id);

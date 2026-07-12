@@ -5,8 +5,6 @@ const Product = require("../models/productModel");
 const Customer = require("../models/customers");
 const mongoose = require("mongoose"); 
 
-// Create Order
-// POST /api/orders
 const createOrder = async (req, res) => {
   try {
     const customerId = req.user.id;
@@ -239,10 +237,6 @@ const createOrder = async (req, res) => {
   }
 };
 
-// =========================================
-// Get My Orders
-// GET /api/orders/my-orders
-// =========================================
 const getMyOrders = async (req, res) => {
   try {
     const customerId = req.user.id;
@@ -281,11 +275,6 @@ const getMyOrders = async (req, res) => {
   }
 };
  
-
-// =========================================
-// Get Order By ID
-// GET /api/orders/:id
-// =========================================
 const getOrderById = async (req, res) => {
   try {
     const customerId = req.user.id;
@@ -323,11 +312,6 @@ const getOrderById = async (req, res) => {
   }
 };
  
-
-// =========================================
-// Cancel Order
-// PATCH /api/orders/:id/cancel
-// =========================================
 const cancelOrder = async (req, res) => {
   try {
 
@@ -394,12 +378,6 @@ const cancelOrder = async (req, res) => {
     }
   };
 
-
-
-// =========================================
-// Get Seller Orders
-// GET /api/orders/seller
-// =========================================
 const getSellerOrders = async (req, res) => {
   try {
     const sellerId = req.user.id;
@@ -462,12 +440,7 @@ const getSellerOrders = async (req, res) => {
     });
   }
 };
- 
 
-// =========================================
-// Get Seller Order By ID
-// GET /api/orders/seller/:id
-// =========================================
 const getSellerOrderById = async (req, res) => {
   try {
     const sellerId = req.user.id;
@@ -544,10 +517,6 @@ const getSellerOrderById = async (req, res) => {
 };
  
 
-// =========================================
-// Update Order Status
-// PATCH /api/orders/:id/status
-// =========================================
 const updateOrderStatus = async (req, res) => {
   try {
     const sellerId = req.user.id;
@@ -629,11 +598,6 @@ const updateOrderStatus = async (req, res) => {
   }
 };
  
-
-// =========================================
-// Update Tracking Details
-// PATCH /api/orders/:id/tracking
-// =========================================
 const updateTracking = async (req, res) => {
   try {
     const sellerId = req.user.id;

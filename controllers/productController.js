@@ -15,12 +15,14 @@ const slugify = require("slugify");
         public_id: result.public_id,
       });
     }
+
+    const thumbnail = images.length > 0 ? images[0] : {};
+
     const {
       name,
       description,
       shortDescription,
       category,
-      subCategory,
       brand,
       price,
       discountPrice,
@@ -32,8 +34,8 @@ const slugify = require("slugify");
     } = req.body;
 
     const specificationsData = specifications
-  ? JSON.parse(specifications)
-  : {};
+      ? JSON.parse(specifications)
+      : {};
 
     const tagsData = tags ? JSON.parse(tags) : [];
 
@@ -65,7 +67,6 @@ const slugify = require("slugify");
       description,
       shortDescription,
       category: category.trim(),
-      subCategory,
       brand,
       seller: req.user.id,
       price,
@@ -73,6 +74,7 @@ const slugify = require("slugify");
       stock,
       sku,
       images,
+      thumbnail,
      specifications: specificationsData,
      tags: tagsData,
      isFeatured: featured,

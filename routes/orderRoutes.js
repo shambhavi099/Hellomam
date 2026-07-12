@@ -16,10 +16,6 @@ const {
 
 const authMiddleware  = require("../middlewares/authMiddleware");
 
-// ===========================
-// Customer Routes
-// ===========================
-
 // Place Order
 router.post("/", authMiddleware, createOrder);
 
@@ -28,10 +24,6 @@ router.get("/my-orders", authMiddleware, getMyOrders);
 
 // Cancel Order
 router.patch("/:id/cancel", authMiddleware, cancelOrder);
-
-// ===========================
-// Seller Routes
-// ===========================
 
 // Get All Seller Orders
 router.get("/seller", authMiddleware, getSellerOrders);
@@ -44,10 +36,6 @@ router.patch("/:id/status", authMiddleware, updateOrderStatus);
 
 // Update Tracking Details
 router.patch("/:id/tracking", authMiddleware, updateTracking);
-
-// ===========================
-// Common Route
-// ===========================
 
 // Get Single Order
 router.get("/:id", authMiddleware, getOrderById);

@@ -8,10 +8,6 @@ const productController = require("../controllers/productController");
 
 router.post("/register", sellerController.registerSeller);
 
-// ===============================
-// Seller Profile
-// ===============================
-
 router.get("/profile", authMiddleware, sellerController.getProfile);
 
 router.put("/profile", authMiddleware, sellerController.updateProfile);
@@ -34,9 +30,6 @@ router.put(
   sellerController.deactivateSeller
 );
 
-// ===============================
-// Seller Products
-// ===============================
 
 router.post(
   "/products",
