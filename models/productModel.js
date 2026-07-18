@@ -4,12 +4,12 @@ const productSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
     },
     slug: {
       type: String,
-      required: true,
+      required: false,
       unique: true,
       lowercase: true,
       trim: true,
@@ -25,7 +25,7 @@ const productSchema = new mongoose.Schema(
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
-      required: true,
+      required: false,
     },
     brand: {
       type: String,
@@ -35,16 +35,36 @@ const productSchema = new mongoose.Schema(
     seller: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Seller",
-        required: true,
+        required: false,
     },
     price: {
       type: Number,
-      required: true,
+      required: false,
       min: 0,
     },
     discountPrice: {
       type: Number,
       default: 0,
+    },
+    mrp: {
+      type: Number,
+      default: 0,
+    },
+
+    costPrice: {
+      type: Number,
+      default: 0,
+    },
+
+    gst: {
+      type: Number,
+      default: 0,
+    },
+
+    taxType: {
+      type: String,
+      enum: ["Inclusive", "Exclusive"],
+      default: "Inclusive",
     },
     rating: {
       type: Number,
@@ -58,25 +78,47 @@ const productSchema = new mongoose.Schema(
     },
     stock: {
       type: Number,
-      required: true,
+      required: false,
       default: 0,
       min: 0,
+    },
+    barcode: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    minimumStockAlert: {
+      type: Number,
+      default: 5,
+    },
+
+    warehouse: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    stockStatus: {
+      type: String,
+      enum: ["In Stock", "Out of Stock"],
+      default: "In Stock",
     },
     sku: {
       type: String,
       unique: true,
-      required: true,
+      required: false,
       trim: true,
     },
     images: [
       {
         url: {
           type: String,
-          required: true,
+          required: false,
         },
         public_id: {
           type: String,
-          required: true,
+          required: false,
         },
       },
     ],
@@ -84,12 +126,60 @@ const productSchema = new mongoose.Schema(
       url: String,
       public_id: String,
     },
+    shipping: {
+      weight: {
+        type: Number,
+        default: 0,
+      },
+
+      length: {
+        type: Number,
+        default: 0,
+      },
+
+      width: {
+        type: Number,
+        default: 0,
+      },
+
+      height: {
+        type: Number,
+        default: 0,
+      },
+
+      shippingCharge: {
+        type: Number,
+        default: 0,
+      },
+
+      deliveryTime: {
+        type: String,
+        default: "",
+      },
+    },
     specifications: {
       type: Map,
       of: String,
       default: {},
     },
+    variants: {
+      colors: [String],
+      sizes: [String],
+    },
     tags: [String],
+    seo: {
+      metaTitle: {
+        type: String,
+        default: "",
+      },
+
+      metaDescription: {
+        type: String,
+        default: "",
+      },
+
+      keywords: [String],
+    },
     isFeatured: {
       type: Boolean,
       default: false,
@@ -102,6 +192,8 @@ const productSchema = new mongoose.Schema(
   {
     timestamps: true,
   }
+
+  
 );
 
 module.exports = mongoose.model("Product", productSchema);

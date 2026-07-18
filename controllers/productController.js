@@ -3,17 +3,19 @@ const uploadToCloudinary = require("../utils/uploadToCloudinary");
 const slugify = require("slugify");
 
 // CREATE PRODUCT
- const createProduct = async (req, res) => {
+const createProduct = async (req, res) => {
   try {
     const images = [];
 
-    for (const file of req.files) {
-    const result = await uploadToCloudinary(file.buffer);
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const result = await uploadToCloudinary(file.buffer);
 
-      images.push({
-        url: result.secure_url,
-        public_id: result.public_id,
-      });
+        images.push({
+          url: result.secure_url,
+          public_id: result.public_id,
+        });
+      }
     }
 
     const thumbnail = images.length > 0 ? images[0] : {};
@@ -26,20 +28,58 @@ const slugify = require("slugify");
       brand,
       price,
       discountPrice,
+      mrp,
+      costPrice,
+      gst,
+      taxType,
       stock,
+      barcode,
+      minimumStockAlert,
+      warehouse,
+      stockStatus,
       sku,
       specifications,
+      shipping,
+      variants,
       tags,
+      seo,
       isFeatured,
     } = req.body;
 
     const specificationsData = specifications
-      ? JSON.parse(specifications)
+      ? typeof specifications === "string"
+        ? JSON.parse(specifications)
+        : specifications
       : {};
 
-    const tagsData = tags ? JSON.parse(tags) : [];
+    const tagsData = tags
+      ? typeof tags === "string"
+        ? JSON.parse(tags)
+        : tags
+      : [];
 
-    const featured = isFeatured === "true";
+    const shippingData = shipping
+      ? typeof shipping === "string"
+        ? JSON.parse(shipping)
+        : shipping
+      : {};
+
+    const variantsData = variants
+      ? typeof variants === "string"
+        ? JSON.parse(variants)
+        : variants
+      : {};
+
+    const seoData = seo
+      ? typeof seo === "string"
+        ? JSON.parse(seo)
+        : seo
+      : {};
+
+    const featured =
+      typeof isFeatured === "string"
+        ? isFeatured === "true"
+        : isFeatured;
 
     const existing = await Product.findOne({ sku });
 
@@ -63,21 +103,32 @@ const slugify = require("slugify");
 
     const product = await Product.create({
       name,
-      slug: slugify(name, { lower: true }),
+      slug,
       description,
       shortDescription,
-      category: category.trim(),
+      category ,
       brand,
       seller: req.user.id,
       price,
       discountPrice,
+      mrp,
+      costPrice,
+      gst,
+      taxType,
       stock,
       sku,
+      barcode,
+      minimumStockAlert,
+      warehouse,
+      stockStatus,
       images,
       thumbnail,
-     specifications: specificationsData,
-     tags: tagsData,
-     isFeatured: featured,
+      shipping: shippingData,
+      specifications: specificationsData,
+      variants: variantsData,
+      tags: tagsData,
+      seo: seoData,
+      isFeatured: featured,
     });
 
     res.status(201).json({
@@ -227,6 +278,26 @@ const slugify = require("slugify");
     }
 
     const updateData = { ...req.body };
+
+    if (updateData.specifications && typeof updateData.specifications === "string") {
+      updateData.specifications = JSON.parse(updateData.specifications);
+    }
+
+    if (updateData.tags && typeof updateData.tags === "string") {
+      updateData.tags = JSON.parse(updateData.tags);
+    }
+
+    if (updateData.shipping && typeof updateData.shipping === "string") {
+      updateData.shipping = JSON.parse(updateData.shipping);
+    }
+
+    if (updateData.variants && typeof updateData.variants === "string") {
+      updateData.variants = JSON.parse(updateData.variants);
+    }
+
+    if (updateData.seo && typeof updateData.seo === "string") {
+      updateData.seo = JSON.parse(updateData.seo);
+    }
 
     // Update slug if name changes
     if (updateData.name) {

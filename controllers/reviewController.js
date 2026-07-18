@@ -190,9 +190,115 @@ const deleteReview = async (req, res) => {
   }
 };
 
+const getSellerReviews = async (req, res) => {
+  try {
+    const sellerId = req.user.id;
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const rating = req.query.rating;
+
+    const sellerProducts = await Product.find({
+      seller: sellerId,
+    }).select("_id");
+
+    const productIds = sellerProducts.map((p) => p._id);
+
+    const filter = {
+      product: {
+        $in: productIds,
+      },
+    };
+
+    if (rating) {
+      filter.rating = Number(rating);
+    }
+
+    const totalReviews = await Review.countDocuments(filter);
+
+    const reviews = await Review.find(filter)
+      .populate("customer", "firstName lastName email")
+      .populate("product", "name images")
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    const ratingStats = await Review.aggregate([
+      {
+        $match: {
+          product: {
+            $in: productIds,
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          averageRating: {
+            $avg: "$rating",
+          },
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      averageRating:
+        ratingStats.length > 0
+          ? Number(ratingStats[0].averageRating.toFixed(1))
+          : 0,
+      totalReviews,
+      currentPage: page,
+      totalPages: Math.ceil(totalReviews / limit),
+      reviews,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+const getReviewById = async (req, res) => {
+  try {
+    const sellerId = req.user.id;
+
+    const review = await Review.findById(req.params.id)
+      .populate("customer", "firstName lastName email")
+      .populate("product", "name seller images");
+
+    if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: "Review not found",
+      });
+    }
+
+    if (review.product.seller.toString() !== sellerId) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      review,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}; 
+
 module.exports = {
   addReview,
   getProductReviews,
   updateReview,
   deleteReview,
+  getSellerReviews,
+  getReviewById
 };
