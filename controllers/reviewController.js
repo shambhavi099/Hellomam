@@ -1,6 +1,7 @@
 const Review = require("../models/review");
 const Product = require("../models/productModel");
 const Order = require("../models/order");
+const mongoose = require("mongoose");
 
 const updateProductRating = async (productId) => {
   const stats = await Review.aggregate([
@@ -39,8 +40,7 @@ const addReview = async (req, res) => {
       });
     }
 
-    const product = await Product.findById(productId);
-
+    const product = await Product.findOne({ _id: productId });
     if (!product) {
       return res.status(404).json({
         success: false,

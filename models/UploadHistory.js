@@ -34,6 +34,14 @@ const uploadHistorySchema = new mongoose.Schema(
       enum: ["Success", "Partial", "Failed"],
       default: "Success",
     },
+
+    failedRows: [
+      {
+        row: Number,
+        product: String,
+        reason: String,
+      },
+    ],
   },
   {
     timestamps: true,

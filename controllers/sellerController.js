@@ -37,12 +37,13 @@ const registerSeller = async (req, res) => {
     }
 
     // Check existing seller
+    const existingCustomer = await Customer.findOne({ email });
     const existingSeller = await Seller.findOne({ email });
 
-    if (existingSeller) {
+    if (existingCustomer || existingSeller) {
       return res.status(400).json({
         success: false,
-        message: "Email already registered.",
+        message: "Email is already registered.",
       });
     }
 

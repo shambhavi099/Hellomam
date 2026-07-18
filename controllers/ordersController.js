@@ -196,10 +196,7 @@ const createOrder = async (req, res) => {
         total,
       },
 
-      payment: {
-        method: paymentMethod,
-        status: "PENDING",
-      },
+      paymentStatus: "pending",
 
       notes,
     });

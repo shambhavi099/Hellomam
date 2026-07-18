@@ -15,7 +15,6 @@ exports.bulkUploadProducts = async (req, res) => {
     }
 
     const workbook = new ExcelJS.Workbook();
-
     await workbook.xlsx.load(req.file.buffer);
 
     const worksheet = workbook.worksheets[0];
@@ -57,9 +56,11 @@ exports.bulkUploadProducts = async (req, res) => {
     let products = [];
     let successCount = 0;
     let failedCount = 0;
+    let failedRows = [];
 
     for (let index = 0; index < rows.length; index++) {
-    const row = rows[index];
+      const row = rows[index];
+
       try {
         const {
           Name,
@@ -83,32 +84,32 @@ exports.bulkUploadProducts = async (req, res) => {
         if (!Name || !Category || !Price || !SKU) {
           failedCount++;
 
-            failedRows.push({
+          failedRows.push({
             row: index + 2,
             product: Name || "",
             reason: "Required fields are missing.",
-            });
+          });
 
-            continue;
+          continue;
         }
 
         const category = await Category.findOne({
-            name: {
-                $regex: new RegExp(`^${Category.trim()}$`, "i"),
-            },
-            isActive: true,
+          name: {
+            $regex: new RegExp(`^${Category.trim()}$`, "i"),
+          },
+          isActive: true,
         });
 
         if (!category) {
           failedCount++;
 
-            failedRows.push({
+          failedRows.push({
             row: index + 2,
             product: Name,
             reason: `Category "${Category}" not found.`,
-            });
+          });
 
-            continue;
+          continue;
         }
 
         const existingProduct = await Product.findOne({
@@ -118,13 +119,13 @@ exports.bulkUploadProducts = async (req, res) => {
         if (existingProduct) {
           failedCount++;
 
-            failedRows.push({
+          failedRows.push({
             row: index + 2,
             product: Name,
             reason: `SKU "${SKU}" already exists.`,
-            });
+          });
 
-            continue;
+          continue;
         }
 
         products.push({
@@ -149,8 +150,7 @@ exports.bulkUploadProducts = async (req, res) => {
           barcode: Barcode,
           warehouse: Warehouse,
           minimumStockAlert: Number(MinimumStockAlert) || 5,
-          stockStatus:
-            Number(Stock) > 0 ? "In Stock" : "Out of Stock",
+          stockStatus: Number(Stock) > 0 ? "In Stock" : "Out of Stock",
         });
 
         successCount++;
@@ -158,10 +158,11 @@ exports.bulkUploadProducts = async (req, res) => {
         failedCount++;
 
         failedRows.push({
-        row: index + 2,
-        product: row.Name || "",
-        reason: error.message,
+          row: index + 2,
+          product: row.Name || "",
+          reason: error.message,
         });
+      }
     }
 
     if (products.length) {
@@ -170,11 +171,9 @@ exports.bulkUploadProducts = async (req, res) => {
 
     let status = "Success";
 
-    if (failedCount && successCount) {
+    if (failedCount > 0 && successCount > 0) {
       status = "Partial";
-    }
-
-    if (failedCount === rows.length) {
+    } else if (failedCount === rows.length) {
       status = "Failed";
     }
 
@@ -185,6 +184,7 @@ exports.bulkUploadProducts = async (req, res) => {
       successCount,
       failedCount,
       status,
+      failedRows,
     });
 
     return res.status(201).json({
@@ -195,10 +195,9 @@ exports.bulkUploadProducts = async (req, res) => {
         successCount,
         failedCount,
         status,
-        failedRows
+        failedRows,
       },
     });
-}
   } catch (error) {
     return res.status(500).json({
       success: false,

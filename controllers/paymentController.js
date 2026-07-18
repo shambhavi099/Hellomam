@@ -15,14 +15,28 @@ const processPayment = async (req, res) => {
 
 
     const order = await Order.findById(orderId);
+console.log("========== PAYMENT DEBUG ==========");
+console.log("Request Body:", req.body);
+console.log("User ID:", req.user.id);
 
+console.log("Order Found:", !!order);
+
+if (order) {
+  console.log("Order ID:", order._id.toString());
+  console.log("Order Customer:", order.customer);
+  console.log("Order Customer ID:", order.customer?.customerId?.toString());
+  console.log("Payment Status:", order.paymentStatus);
+}
     if (!order) {
       return res.status(404).json({
         success: false,
         message: "Order not found",
       });
     }
-
+console.log(
+  "Match:",
+  order.customer.customerId.toString() === req.user.id
+);
 
     if (
         order.customer.customerId.toString() !== req.user.id
@@ -101,11 +115,7 @@ const processPayment = async (req, res) => {
 };
 
 
-
-
-
-// @desc Get payment details
-// @route GET /api/payments/:id
+//route GET /api/payments/:id
 
 const getPaymentDetails = async (req, res) => {
 
