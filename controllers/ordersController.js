@@ -6,6 +6,7 @@ const Customer = require("../models/customers");
 const mongoose = require("mongoose"); 
 
 const createOrder = async (req, res) => {
+  console.log("Controller Loaded");
   try {
     const customerId = req.user.id;
 
@@ -172,34 +173,38 @@ const createOrder = async (req, res) => {
 
     const orderNumber = `ORD${Date.now()}`;
 
-    const order = await Order.create({
-      orderNumber,
+    const orderData = {
+  orderNumber,
 
-      customer: {
-        customerId: customer._id,
-        name: customer.name,
-        email: customer.email,
-        phone: customer.phone,
-      },
+  customer: {
+    customerId: customer._id,
+    name: customer.name,
+    email: customer.email,
+    phone: customer.phone,
+  },
 
-      items: orderItems,
+  items: orderItems,
 
-      shippingAddress,
+  shippingAddress,
 
-      billingAddress: shippingAddress,
+  billingAddress: shippingAddress,
 
-      pricing: {
-        subtotal,
-        shippingCharge,
-        tax,
-        discount,
-        total,
-      },
+  pricing: {
+    subtotal,
+    shippingCharge,
+    tax,
+    discount,
+    total,
+  },
 
-      paymentStatus: "pending",
+  paymentStatus: "pending",
 
-      notes,
-    });
+  notes,
+};
+
+console.log("ORDER DATA =>", JSON.stringify(orderData, null, 2));
+
+const order = await Order.create(orderData);
 
     for (const item of orderItems) {
       await Product.findByIdAndUpdate(

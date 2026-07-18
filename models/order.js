@@ -101,39 +101,7 @@ const addressSchema = new mongoose.Schema(
   { _id: false }
 );
 
-// =======================
-// Payment
-// =======================
-const paymentSchema = new mongoose.Schema(
-  {
-    method: {
-      type: String,
-      enum: ["COD", "ONLINE"],
-      default: "COD",
-    },
-
-    status: {
-      type: String,
-      enum: [
-        "PENDING",
-        "PAID",
-        "FAILED",
-        "REFUNDED",
-        "PARTIALLY_REFUNDED",
-      ],
-      default: "PENDING",
-    },
-
-    transactionId: String,
-
-    paidAt: Date,
-  },
-  { _id: false }
-);
-
-// =======================
 // Shipping
-// =======================
 const shippingSchema = new mongoose.Schema(
   {
     courier: String,
