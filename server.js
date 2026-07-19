@@ -13,6 +13,10 @@ const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const bulkUploadRoutes = require("./routes/bulkUploadRoutes");
+const bankRoutes = require("./routes/bankRoutes");
+const userBankRoutes = require("./routes/userBankRoutes");
+const vendorPaymentRoutes = require("./routes/vendorPaymentRoutes");
+const vendorCommissionRoutes = require("./routes/vendorCommissionRoutes");
 
 const app = express();
 connectDB();
@@ -38,6 +42,10 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/bulk-upload", bulkUploadRoutes);
+app.use("/api/banks", bankRoutes);
+app.use("/api/user-banks", userBankRoutes);
+app.use("/api/vendor-payments", vendorPaymentRoutes);
+app.use("/api/vendor-commissions", vendorCommissionRoutes);
 
 app.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`);

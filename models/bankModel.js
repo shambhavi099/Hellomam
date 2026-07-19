@@ -44,21 +44,19 @@ const bankSchema = new mongoose.Schema(
   }
 );
 
-bankSchema.pre("save", async function (next) {
-  if (!this.bankId) {
-    const Bank = mongoose.model("Bank");
+bankSchema.pre("save", async function () {
+  if (this.bankId) return;
 
-    const lastBank = await Bank.findOne().sort({ createdAt: -1 });
+  const Bank = mongoose.models.Bank;
 
-    if (!lastBank || !lastBank.bankId) {
-      this.bankId = "BANK001";
-    } else {
-      const number = parseInt(lastBank.bankId.replace("BANK", ""));
-      this.bankId = `BANK${String(number + 1).padStart(3, "0")}`;
-    }
+  const lastBank = await Bank.findOne().sort({ createdAt: -1 });
+
+  if (!lastBank || !lastBank.bankId) {
+    this.bankId = "BANK001";
+  } else {
+    const number = parseInt(lastBank.bankId.replace("BANK", ""), 10);
+    this.bankId = `BANK${String(number + 1).padStart(3, "0")}`;
   }
-
-  next();
 });
 
 module.exports = mongoose.model("Bank", bankSchema);

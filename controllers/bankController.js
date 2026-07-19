@@ -242,11 +242,9 @@ const getBankById = async (req, res) => {
   }
 };
 
-// ==============================
-// UPDATE BANK
-// ==============================
-
 const updateBank = async (req, res) => {
+  console.log("BODY:", req.body);
+    console.log("PARAMS:", req.params);
   try {
     const { id } = req.params;
 
@@ -311,18 +309,14 @@ const updateBank = async (req, res) => {
       bank: updatedBank,
     });
   } catch (error) {
-    console.error("Update Bank Error:", error);
+  console.error(error.stack);
 
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
+  res.status(500).json({
+    success: false,
+    message: error.message,
+  });
+}
 };
-
-// ==============================
-// DELETE BANK
-// ==============================
 
 const deleteBank = async (req, res) => {
   try {
@@ -350,10 +344,6 @@ const deleteBank = async (req, res) => {
     });
   }
 };
-
-// ==============================
-// UPDATE STATUS
-// ==============================
 
 const updateBankStatus = async (req, res) => {
   try {
