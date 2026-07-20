@@ -16,7 +16,7 @@ const bulkUploadRoutes = require("./routes/bulkUploadRoutes");
 const bankRoutes = require("./routes/bankRoutes");
 const userBankRoutes = require("./routes/userBankRoutes");
 const vendorPaymentRoutes = require("./routes/vendorPaymentRoutes");
-const vendorCommissionRoutes = require("./routes/vendorCommissionRoutes");
+const vendorCommissionRoutes = require("./routes/vendorCommissionRoutes.js");
 
 const app = express();
 connectDB();
