@@ -48,19 +48,6 @@ const addReview = async (req, res) => {
       });
     }
 
-    const order = await Order.findOne({
-      "customer.customerId": req.user.id,
-      orderStatus: "DELIVERED",
-      "items.product": productId,
-    });
-
-    if (!order) {
-      return res.status(403).json({
-        success: false,
-        message: "You can review only purchased products",
-      });
-    }
-
     const existingReview = await Review.findOne({
       customer: req.user.id,
       product: productId,
