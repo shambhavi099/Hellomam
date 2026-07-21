@@ -22,10 +22,15 @@ const sellerSchema = new mongoose.Schema(
       trim: true,
     },
 
+    clerkUserId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+
     password: {
       type: String,
-      required: true,
-      minlength: 6,
+      default: "",
     },
 
     phone: {

@@ -1,29 +1,73 @@
-  const jwt = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
+const { getAuth } = require("@clerk/express");
 
-  const authMiddleware = (req, res, next) => {
-    try {
-      const authHeader = req.headers.authorization;
+const Seller = require("../models/sellersModel");
+const Customer = require("../models/customers");
 
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({
-          success: false,
-          message: "Access denied. No token provided.",
-        });
-      }
+const authMiddleware = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
 
-      const token = authHeader.split(" ")[1];
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      req.user = decoded;
-
-      next();
-    } catch (error) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         success: false,
-        message: "Invalid or expired token.",
+        message: "Access denied. No token provided.",
       });
     }
-  };
 
-  module.exports = authMiddleware;
+    const token = authHeader.split(" ")[1];
+
+    // ==========================
+    // Try Customer JWT first
+    // ==========================
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      const customer = await Customer.findById(decoded.id);
+
+      if (customer) {
+        req.user = customer;
+        return next();
+      }
+    } catch (err) {
+      // Ignore and try Clerk
+    }
+
+    // ==========================
+    // Try Seller Clerk
+    // ==========================
+
+    const { userId } = getAuth(req);
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid authentication.",
+      });
+    }
+
+    const seller = await Seller.findOne({
+      clerkUserId: userId,
+    });
+
+    if (!seller) {
+      return res.status(404).json({
+        success: false,
+        message: "Seller not found.",
+      });
+    }
+
+    req.user = seller;
+
+    next();
+
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+module.exports = authMiddleware;

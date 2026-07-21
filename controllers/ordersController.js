@@ -382,7 +382,7 @@ const cancelOrder = async (req, res) => {
 
 const getSellerOrders = async (req, res) => {
   try {
-    const sellerId = req.user.id;
+    const sellerId = req.user._id;
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -445,7 +445,7 @@ const getSellerOrders = async (req, res) => {
 
 const getSellerOrderById = async (req, res) => {
   try {
-    const sellerId = req.user.id;
+    const sellerId = req.user._id;
     const { id } = req.params;
 
     // Validate Order ID
@@ -520,7 +520,7 @@ const getSellerOrderById = async (req, res) => {
 
 const updateOrderStatus = async (req, res) => {
   try {
-    const sellerId = req.user.id;
+    const sellerId = req.user._id;
     const { id } = req.params;
     const { orderStatus } = req.body;
 
@@ -605,7 +605,7 @@ const updateOrderStatus = async (req, res) => {
  
 const updateTracking = async (req, res) => {
   try {
-    const sellerId = req.user.id;
+    const sellerId = req.user._id;
     const { id } = req.params;
 
     const {

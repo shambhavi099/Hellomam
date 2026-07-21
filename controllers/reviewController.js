@@ -179,7 +179,7 @@ const deleteReview = async (req, res) => {
 
 const getSellerReviews = async (req, res) => {
   try {
-    const sellerId = req.user.id;
+    const sellerId = req.user._id;
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -249,7 +249,7 @@ const getSellerReviews = async (req, res) => {
 
 const getReviewById = async (req, res) => {
   try {
-    const sellerId = req.user.id;
+    const sellerId = req.user._id;
 
     const review = await Review.findById(req.params.id)
       .populate("customer", "firstName lastName email")

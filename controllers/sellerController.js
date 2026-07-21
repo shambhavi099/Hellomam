@@ -7,7 +7,8 @@ const bcrypt = require("bcryptjs");
 
 const registerSeller = async (req, res) => {
   try {
-    const {
+   const {
+      clerkUserId,
       firstName,
       lastName,
       email,
@@ -23,10 +24,10 @@ const registerSeller = async (req, res) => {
 
     // Check required fields
     if (
+      !clerkUserId ||
       !firstName ||
       !lastName ||
       !email ||
-      !password ||
       !phone ||
       !businessName
     ) {
@@ -48,14 +49,15 @@ const registerSeller = async (req, res) => {
     }
 
     // Hash Password
-    const hashedPassword = await bcrypt.hash(password, 10);
+   // const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create Seller
     const seller = await Seller.create({
+      clerkUserId,
       firstName,
       lastName,
       email,
-      password: hashedPassword,
+      password: password || "",
       phone,
       businessName,
       businessType,
@@ -219,7 +221,7 @@ const changePassword = async (req, res) => {
 
 const dashboard = async (req, res) => {
   try {
-    const sellerId = req.user.id;
+    const sellerId = req.user._id;
 
     const firstDayOfMonth = new Date(
       new Date().getFullYear(),

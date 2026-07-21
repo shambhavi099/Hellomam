@@ -20,7 +20,6 @@ router.put(
 
 router.get(
   "/dashboard",
-  authMiddleware,
   sellerController.dashboard
 );
 

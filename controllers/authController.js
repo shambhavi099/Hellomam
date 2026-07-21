@@ -34,15 +34,16 @@ const login = async (req, res) => {
       });
     }
 
-    // 1. Try Seller
-    let user = await Seller.findOne({ email });
-    let role = "seller";
+   const user = await Customer.findOne({ email });
 
-    // 2. If not found, try Customer
-    if (!user) {
-      user = await Customer.findOne({ email });
-      role = "customer";
-    }
+if (!user) {
+  return res.status(401).json({
+    success: false,
+    message: "Invalid email or password.",
+  });
+}
+
+const role = "customer";
 
     // 3. User not found
     if (!user) {
@@ -83,7 +84,6 @@ const login = async (req, res) => {
         lastName: user.lastName,
         email: user.email,
         role,
-        businessName: role === "seller" ? user.businessName : undefined,
       },
     });
   } catch (error) {
@@ -251,8 +251,104 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const sendSellerOtp = async (req, res) => {
+  try {
+    const { phone } = req.body;
+
+    const seller = await Seller.findOne({ phone });
+
+    if (!seller) {
+      return res.status(404).json({
+        success: false,
+        message: "Seller not found.",
+      });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    seller.loginOtp = otp;
+    seller.loginOtpExpire = Date.now() + 5 * 60 * 1000;
+
+    await seller.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP generated successfully.",
+      otp
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
+
+const verifySellerOtp = async (req, res) => {
+  try {
+
+    const { phone, otp } = req.body;
+
+    const seller = await Seller.findOne({ phone });
+
+    if (!seller) {
+      return res.status(404).json({
+        success: false,
+        message: "Seller not found.",
+      });
+    }
+
+    if (
+      seller.loginOtp !== otp ||
+      seller.loginOtpExpire < Date.now()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired OTP.",
+      });
+    }
+
+    seller.loginOtp = undefined;
+    seller.loginOtpExpire = undefined;
+
+    await seller.save();
+
+    const token = generateToken(
+      seller._id,
+      "seller"
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Login successful.",
+      token,
+      user: {
+        id: seller._id,
+        firstName: seller.firstName,
+        lastName: seller.lastName,
+        businessName: seller.businessName,
+        phone: seller.phone,
+        role: "seller",
+      },
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
+
 module.exports = {
   login,
+  sendSellerOtp,
+  verifySellerOtp,
   forgotPassword,
   resetPassword,
 };

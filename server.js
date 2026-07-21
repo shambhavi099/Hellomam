@@ -1,3 +1,4 @@
+const { clerkMiddleware } = require("@clerk/express");
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
@@ -23,6 +24,7 @@ connectDB();
 
 app.use(cors());
 app.use(express.json());
+app.use(clerkMiddleware());
 app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
