@@ -9,6 +9,11 @@ const userBankController = require("../controllers/userBankController");
 router.post("/", authMiddleware, userBankController.createUserBank);
 router.get("/", authMiddleware, userBankController.getUserBanks);
 router.get(
+  "/all",
+  authMiddleware,
+  userBankController.getAllUserBanks
+);
+router.get(
   "/customer/:customerId",
   authMiddleware,
   roleMiddleware("seller"),

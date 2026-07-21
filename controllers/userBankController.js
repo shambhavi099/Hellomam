@@ -486,6 +486,25 @@ const removeCustomerBankFromSeller = async (req, res) => {
   }
 };
 
+const getAllUserBanks = async (req, res) => {
+  try {
+    const userBanks = await UserBank.find()
+      .populate("customer", "firstName lastName email mobileNumber")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      userBanks,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   createUserBank,
   getUserBanks,
@@ -495,5 +514,6 @@ module.exports = {
   updateUserBankStatus,
   makePrimaryBank,
   getCustomerBankDetails,
-  removeCustomerBankFromSeller
+  removeCustomerBankFromSeller,
+  getAllUserBanks,
 };
