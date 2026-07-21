@@ -57,7 +57,6 @@ const registerSeller = async (req, res) => {
       firstName,
       lastName,
       email,
-      password: password || "",
       phone,
       businessName,
       businessType,
@@ -221,7 +220,7 @@ const changePassword = async (req, res) => {
 
 const dashboard = async (req, res) => {
   try {
-    const sellerId = req.user._id;
+    const sellerId = req.user?._id ||"6a5a6fa5f1648f9241bcde14";
 
     const firstDayOfMonth = new Date(
       new Date().getFullYear(),

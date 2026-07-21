@@ -6,6 +6,7 @@ const Customer = require("../models/customers");
 
 const authMiddleware = async (req, res, next) => {
   try {
+    console.log("AUTH MIDDLEWARE HIT");
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -17,26 +18,22 @@ const authMiddleware = async (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
-    // ==========================
-    // Try Customer JWT first
-    // ==========================
-
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       const customer = await Customer.findById(decoded.id);
 
       if (customer) {
-        req.user = customer;
-        return next();
-      }
+  customer.role = "customer";
+  req.user = customer;
+
+  console.log("Customer Found:", req.user);
+
+  return next();
+}
     } catch (err) {
       // Ignore and try Clerk
     }
-
-    // ==========================
-    // Try Seller Clerk
-    // ==========================
 
     const { userId } = getAuth(req);
 
@@ -58,9 +55,12 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    req.user = seller;
+    seller.role = "seller";
+req.user = seller;
 
-    next();
+console.log("Seller Found:", req.user);
+
+return next();
 
   } catch (error) {
     return res.status(401).json({

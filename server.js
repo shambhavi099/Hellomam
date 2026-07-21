@@ -24,8 +24,8 @@ connectDB();
 
 app.use(cors());
 app.use(express.json());
-app.use(clerkMiddleware());
 app.use(express.urlencoded({ extended: true }));
+app.use(clerkMiddleware());
 
 app.get("/", (req, res) => {
   res.json({ message: "E-Commerce Backend is running" });

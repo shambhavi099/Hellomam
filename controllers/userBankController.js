@@ -1,14 +1,10 @@
 const UserBank = require("../models/userBankModel");
-const Bank = require("../models/bankModel");
-
-// ======================================
-// CREATE USER BANK
-// ======================================
+//const roleMiddleware = require("../middlewares/roleMiddleware");
 
 const createUserBank = async (req, res) => {
   try {
     const {
-      bank,
+      bankName,
       accountHolderName,
       accountNumber,
       ifscCode,
@@ -18,7 +14,7 @@ const createUserBank = async (req, res) => {
     } = req.body;
 
     if (
-      !bank ||
+      !bankName ||
       !accountHolderName ||
       !accountNumber ||
       !ifscCode
@@ -26,15 +22,6 @@ const createUserBank = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Please fill all required fields.",
-      });
-    }
-
-    const bankExists = await Bank.findById(bank);
-
-    if (!bankExists) {
-      return res.status(404).json({
-        success: false,
-        message: "Bank not found.",
       });
     }
 
@@ -51,16 +38,16 @@ const createUserBank = async (req, res) => {
 
     if (isPrimary) {
       await UserBank.updateMany(
-        { seller: req.user.id },
+       { customer: req.user._id },
         {
           isPrimary: false,
         }
       );
     }
 
-    const userBank = await UserBank.create({
-      seller: req.user.id,
-      bank,
+   const userBank = await UserBank.create({
+      customer: req.user._id,
+      bankName,
       accountHolderName,
       accountNumber,
       ifscCode: ifscCode.toUpperCase(),
@@ -69,9 +56,8 @@ const createUserBank = async (req, res) => {
       isPrimary,
     });
 
-    const result = await UserBank.findById(userBank._id)
-      .populate("seller", "firstName lastName email")
-      .populate("bank", "bankName bankId");
+      const result = await UserBank.findById(userBank._id)
+      .populate("customer", "firstName lastName email");
 
     res.status(201).json({
       success: true,
@@ -88,12 +74,10 @@ const createUserBank = async (req, res) => {
   }
 };
 
-// ======================================
-// GET USER BANKS
-// ======================================
-
 const getUserBanks = async (req, res) => {
   try {
+    console.log("REQ USER =>", req.user);
+console.log("AUTH HEADER =>", req.headers.authorization);
     const {
       page = 1,
       limit = 10,
@@ -107,7 +91,7 @@ const getUserBanks = async (req, res) => {
     } = req.query;
 
     const query = {
-      seller: req.user.id,
+      customer: req.user._id,
     };
 
     if (search) {
@@ -189,11 +173,7 @@ const getUserBanks = async (req, res) => {
     const total = await UserBank.countDocuments(query);
 
     const userBanks = await UserBank.find(query)
-      .populate("bank", "bankName bankId")
-      .populate(
-        "seller",
-        "firstName lastName email phone"
-      )
+      .populate("customer", "firstName lastName email phone")
       .sort(sortOption)
       .skip((page - 1) * Number(limit))
       .limit(Number(limit));
@@ -215,18 +195,13 @@ const getUserBanks = async (req, res) => {
   }
 };
 
-// ======================================
-// GET SINGLE USER BANK
-// ======================================
-
 const getUserBankById = async (req, res) => {
   try {
     const userBank = await UserBank.findOne({
       _id: req.params.id,
-      seller: req.user.id,
+      customer: req.user._id,
     })
-      .populate("seller", "firstName lastName email")
-      .populate("bank");
+    .populate("customer", "firstName lastName email phone")
 
     if (!userBank) {
       return res.status(404).json({
@@ -248,9 +223,6 @@ const getUserBankById = async (req, res) => {
     });
   }
 };
-// ======================================
-// UPDATE USER BANK
-// ======================================
 
 const updateUserBank = async (req, res) => {
   try {
@@ -258,7 +230,7 @@ const updateUserBank = async (req, res) => {
 
     const userBank = await UserBank.findOne({
       _id: id,
-      seller: req.user.id,
+      customer: req.user._id,
     });
 
     if (!userBank) {
@@ -269,7 +241,7 @@ const updateUserBank = async (req, res) => {
     }
 
     const {
-      bank,
+      bankName,
       accountHolderName,
       accountNumber,
       ifscCode,
@@ -293,23 +265,10 @@ const updateUserBank = async (req, res) => {
       }
     }
 
-    if (bank) {
-      const bankExists = await Bank.findById(bank);
-
-      if (!bankExists) {
-        return res.status(404).json({
-          success: false,
-          message: "Bank not found.",
-        });
-      }
-
-      userBank.bank = bank;
-    }
-
     if (isPrimary === true) {
       await UserBank.updateMany(
         {
-          seller: req.user.id,
+          customer: req.user._id,
           _id: { $ne: id },
         },
         {
@@ -331,6 +290,10 @@ const updateUserBank = async (req, res) => {
     userBank.branchName =
       branchName || userBank.branchName;
 
+      if (bankName) {
+  userBank.bankName = bankName;
+}
+
     userBank.accountType =
       accountType || userBank.accountType;
 
@@ -345,8 +308,7 @@ const updateUserBank = async (req, res) => {
     await userBank.save();
 
     const updated = await UserBank.findById(userBank._id)
-      .populate("seller", "firstName lastName email")
-      .populate("bank", "bankName bankId");
+      .populate("customer", "firstName lastName email");
 
     res.status(200).json({
       success: true,
@@ -363,15 +325,11 @@ const updateUserBank = async (req, res) => {
   }
 };
 
-// ======================================
-// DELETE USER BANK
-// ======================================
-
 const deleteUserBank = async (req, res) => {
   try {
     const userBank = await UserBank.findOne({
       _id: req.params.id,
-      seller: req.user.id,
+      customer: req.user._id,
     });
 
     if (!userBank) {
@@ -397,17 +355,13 @@ const deleteUserBank = async (req, res) => {
   }
 };
 
-// ======================================
-// UPDATE USER BANK STATUS
-// ======================================
-
 const updateUserBankStatus = async (req, res) => {
   try {
     const { status } = req.body;
 
     const userBank = await UserBank.findOne({
       _id: req.params.id,
-      seller: req.user.id,
+      customer: req.user._id,
     });
 
     if (!userBank) {
@@ -440,15 +394,11 @@ const updateUserBankStatus = async (req, res) => {
   }
 };
 
-// ======================================
-// MAKE PRIMARY BANK
-// ======================================
-
 const makePrimaryBank = async (req, res) => {
   try {
     const userBank = await UserBank.findOne({
       _id: req.params.id,
-      seller: req.user.id,
+      customer: req.user._id,
     });
 
     if (!userBank) {
@@ -460,7 +410,7 @@ const makePrimaryBank = async (req, res) => {
 
     await UserBank.updateMany(
       {
-        seller: req.user.id,
+        customer: req.user._id,
       },
       {
         isPrimary: false,
@@ -486,6 +436,56 @@ const makePrimaryBank = async (req, res) => {
   }
 };
 
+const getCustomerBankDetails = async (req, res) => {
+   const bank = await UserBank.findOne({
+      customer: req.params.customerId,
+   }).populate("customer","firstName lastName email");
+
+   if (!bank) {
+      return res.status(404).json({
+         success:false,
+         message:"Bank details not found."
+      });
+   }
+
+   res.status(200).json({
+      success:true,
+      bank,
+   });
+};
+
+const removeCustomerBankFromSeller = async (req, res) => {
+  try {
+    const userBank = await UserBank.findById(req.params.id);
+
+    if (!userBank) {
+      return res.status(404).json({
+        success: false,
+        message: "User bank not found.",
+      });
+    }
+
+    // Hide from this seller's dashboard only
+    if (!userBank.hiddenForSellers.includes(req.user._id)) {
+      userBank.hiddenForSellers.push(req.user._id);
+      await userBank.save();
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User bank removed from seller dashboard.",
+    });
+
+  } catch (error) {
+    console.error("Remove Customer Bank:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   createUserBank,
   getUserBanks,
@@ -494,4 +494,6 @@ module.exports = {
   deleteUserBank,
   updateUserBankStatus,
   makePrimaryBank,
+  getCustomerBankDetails,
+  removeCustomerBankFromSeller
 };

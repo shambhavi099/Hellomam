@@ -7,16 +7,16 @@ const userBankSchema = new mongoose.Schema(
       unique: true,
     },
 
-    seller: {
+    customer: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Seller",
+      ref: "Customer",
       required: true,
     },
 
-    bank: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Bank",
+    bankName: {
+      type: String,
       required: true,
+      trim: true,
     },
 
     accountHolderName: {
@@ -60,13 +60,20 @@ const userBankSchema = new mongoose.Schema(
       enum: ["Active", "Inactive"],
       default: "Active",
     },
+
+    hiddenForSellers: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Seller",
+    },
+  ],
   },
   {
     timestamps: true,
   }
 );
 
-userBankSchema.pre("save", async function (next) {
+userBankSchema.pre("save", async function () {
   if (!this.userBankId) {
     const UserBank = mongoose.model("UserBank");
 
@@ -77,18 +84,11 @@ userBankSchema.pre("save", async function (next) {
     if (!lastBank || !lastBank.userBankId) {
       this.userBankId = "UB001";
     } else {
-      const number = parseInt(
-        lastBank.userBankId.replace("UB", "")
-      );
+      const number = parseInt(lastBank.userBankId.replace("UB", ""));
 
-      this.userBankId = `UB${String(number + 1).padStart(
-        3,
-        "0"
-      )}`;
+      this.userBankId = `UB${String(number + 1).padStart(3, "0")}`;
     }
   }
-
-  next();
 });
 
 module.exports = mongoose.model(
