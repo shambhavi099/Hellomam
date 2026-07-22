@@ -546,6 +546,67 @@ const deactivateSeller = async (req, res) => {
   }
 };
 
+const getUserDetailsByEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    // Check Seller
+    const seller = await Seller.findOne({ email }).select(
+      "_id firstName lastName email clerkUserId"
+    );
+
+    if (seller) {
+      return res.status(200).json({
+        success: true,
+        role: "seller",
+        data: {
+          userId: seller._id,
+          clerkUserId: seller.clerkUserId,
+          email: seller.email,
+          firstName: seller.firstName,
+          lastName: seller.lastName,
+        },
+      });
+    }
+
+    // Check Customer
+    const customer = await Customer.findOne({ email }).select(
+      "_id firstName lastName email"
+    );
+
+    if (customer) {
+      return res.status(200).json({
+        success: true,
+        role: "customer",
+        data: {
+          userId: customer._id,
+          clerkUserId: null,
+          email: customer.email,
+          firstName: customer.firstName,
+          lastName: customer.lastName,
+        },
+      });
+    }
+
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   registerSeller,
   getProfile,
@@ -553,4 +614,5 @@ module.exports = {
   changePassword,
   dashboard,
   deactivateSeller,
+  getUserDetailsByEmail
 };

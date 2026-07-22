@@ -108,7 +108,7 @@ const createProduct = async (req, res) => {
       shortDescription,
       category ,
       brand,
-      seller: req.user.id,
+      seller: req.user._id,
       price,
       discountPrice,
       mrp,

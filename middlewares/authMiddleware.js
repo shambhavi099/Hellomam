@@ -17,25 +17,36 @@ const authMiddleware = async (req, res, next) => {
     }
 
     const token = authHeader.split(" ")[1];
+    
+    // Customer JWT sirf customer routes ke liye use hoga.
+    // Seller routes me Clerk auth hi use hoga.
+    if (req.originalUrl.startsWith("/api/customer")) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const customer = await Customer.findById(decoded.id);
 
-      const customer = await Customer.findById(decoded.id);
+        if (!customer) {
+          return res.status(401).json({
+            success: false,
+            message: "Customer not found.",
+          });
+        }
 
-      if (customer) {
-  customer.role = "customer";
-  req.user = customer;
+        customer.role = "customer";
+        req.user = customer;
 
-  console.log("Customer Found:", req.user);
-
-  return next();
-}
-    } catch (err) {
-      // Ignore and try Clerk
+        return next();
+      } catch (err) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid customer token.",
+        });
+      }
     }
 
     const { userId } = getAuth(req);
+    console.log("Clerk userId:", userId);
 
     if (!userId) {
       return res.status(401).json({

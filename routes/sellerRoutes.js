@@ -55,6 +55,9 @@ router.get(
   sellerUserController.getCustomerDashboard
 );
 
+// routes/sellerRoutes.js
+router.post("/get-user-details", sellerController.getUserDetailsByEmail);
+
 router.get(
   "/customers/:customerId",
   authMiddleware,
