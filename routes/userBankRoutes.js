@@ -15,8 +15,8 @@ router.get(
 );
 router.get(
   "/customer/:customerId",
-  authMiddleware,
-  roleMiddleware("seller"),
+  roleMiddleware("seller", "customer"),
+  roleMiddleware,
   userBankController.getCustomerBankDetails
 );
 router.get("/:id", authMiddleware, userBankController.getUserBankById);

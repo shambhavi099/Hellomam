@@ -1,4 +1,5 @@
 const Customer = require("../models/customers");
+const Seller = require("../models/sellersModel");
 const bcrypt = require("bcryptjs");
 
 const registerCustomer = async (req, res) => {

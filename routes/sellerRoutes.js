@@ -5,6 +5,7 @@ const authMiddleware = require("../middlewares/authMiddleware");
 
 const sellerController = require("../controllers/sellerController");
 const productController = require("../controllers/productController");
+const sellerUserController = require("../controllers/sellerUserController");
 
 router.post("/register", sellerController.registerSeller);
 
@@ -40,6 +41,24 @@ router.get(
   "/products",
   authMiddleware,
   productController.getMyProducts
+);
+
+router.get(
+  "/customers",
+  authMiddleware,
+  sellerUserController.getCustomers
+);
+
+router.get(
+  "/customers/dashboard",
+  authMiddleware,
+  sellerUserController.getCustomerDashboard
+);
+
+router.get(
+  "/customers/:customerId",
+  authMiddleware,
+  sellerUserController.getCustomerDetails
 );
 
 router.get(
