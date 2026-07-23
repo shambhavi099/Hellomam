@@ -45,26 +45,20 @@ const authMiddleware = async (req, res, next) => {
       }
     }
 
-    const { userId } = getAuth(req);
-    console.log("Clerk userId:", userId);
+    const clerkUserId = token;
 
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid authentication.",
+      console.log("Clerk User ID:", clerkUserId);
+
+      const seller = await Seller.findOne({
+        clerkUserId,
       });
-    }
 
-    const seller = await Seller.findOne({
-      clerkUserId: userId,
-    });
-
-    if (!seller) {
-      return res.status(404).json({
-        success: false,
-        message: "Seller not found.",
-      });
-    }
+      if (!seller) {
+        return res.status(404).json({
+          success: false,
+          message: "Seller not found.",
+        });
+      }
 
     seller.role = "seller";
 req.user = seller;
